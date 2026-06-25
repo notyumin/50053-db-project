@@ -105,6 +105,9 @@ public class TupleDesc implements Serializable {
      */
     public String getFieldName(int i) throws NoSuchElementException {
         // some code goes here
+        if (i < 0 || i >= tdItems.length) {
+            throw new NoSuchElementException();
+        }
         return tdItems[i].fieldName;
     }
 
@@ -120,6 +123,9 @@ public class TupleDesc implements Serializable {
      */
     public Type getFieldType(int i) throws NoSuchElementException {
         // some code goes here
+        if (i < 0 || i >= tdItems.length) {
+            throw new NoSuchElementException();
+        }
         return tdItems[i].fieldType;
     }
 
@@ -192,14 +198,20 @@ public class TupleDesc implements Serializable {
      * @return true if the object is equal to this TupleDesc.
      */
 
-    public boolean equals(TupleDesc o) {
+    public boolean equals(Object o) {
         // some code goes here
-        if (this.numFields() != o.numFields()) {
+        if (o == null || !(o instanceof TupleDesc)) {
+            return false;
+        }
+
+        TupleDesc other = (TupleDesc) o;
+
+        if (this.numFields() != other.numFields()) {
             return false;
         }
 
         for (int i = 0; i < tdItems.length; i++) {
-            if (this.tdItems[i].fieldType != o.tdItems[i].fieldType) {
+            if (this.tdItems[i].fieldType != other.tdItems[i].fieldType) {
                 return false;
             }
         }
