@@ -125,7 +125,51 @@ public class HeapFile implements DbFile {
     // see DbFile.java for javadocs
     public DbFileIterator iterator(TransactionId tid) {
         // some code goes here
-        return null;
-    }
+        return new DbFileIterator() {
+            private int currentPage = -1;
+            private Iterator<Tuple> tupleIterator = null;
 
+            public void open() throws DbException, TransactionAbortedException {
+                currentPage = 0;
+                tupleIterator = getPageIterator(currentPage);
+            }
+
+            private Iterator<Tuple> getPageIterator(int pageNo)
+                    throws DbException, TransactionAbortedException {
+                HeapPageId pid = new HeapPageId(getId(), pageNo);
+                HeapPage page = (HeapPage) Database.getBufferPool().getPage(tid, pid, Permissions.READ_ONLY);
+                return page.iterator();
+            }
+
+            public boolean hasNext() throws DbException, TransactionAbortedException {
+                if (tupleIterator != null) {
+
+                    if (tupleIterator.hasNext()) return true;
+                    while (currentPage < numPages() - 1) {
+                        currentPage++;
+                        tupleIterator = getPageIterator(currentPage);
+                        if (tupleIterator.hasNext()) { return true; }
+                    }
+                }
+                
+
+                return false;
+            }
+
+            public Tuple next() throws DbException, TransactionAbortedException {
+                if (!hasNext()) { throw new NoSuchElementException(); }
+                return tupleIterator.next();
+            }
+
+            public void rewind() throws DbException, TransactionAbortedException {
+                close();
+                open();
+            }
+
+            public void close() {
+                currentPage = -1;
+                tupleIterator = null;
+            }
+        };
+    }
 }
