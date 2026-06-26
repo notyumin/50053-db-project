@@ -45,12 +45,6 @@ public class SeqScan implements OpIterator {
         this.tid = tid;
         this.tableId = tableid;
         this.tableAlias= tableAlias;
-        
-        tableFile = Database.getCatalog().getDatabaseFile(tableId);
-        if (tableFile == null) {
-            System.err.printf("Could not find table file with ID %d", tableFile.getId());
-            System.exit(1);
-        }
     }
 
     /**
@@ -114,7 +108,16 @@ public class SeqScan implements OpIterator {
      */
     public TupleDesc getTupleDesc() {
         // some code goes here
-        return tableFile.getTupleDesc();
+        TupleDesc td = Database.getCatalog().getTupleDesc(tableId);
+        TupleDesc returnTd;
+        Type[] types = new Type[td.numFields()];
+        String[] names = new String[td.numFields()];
+        for (int i = 0; i < td.numFields(); i++) {
+            types[i] = td.getFieldType(i);
+            names[i] = tableAlias + "." + td.getFieldName(i);
+        }
+        returnTd = new TupleDesc(types, names);
+        return returnTd;
     }
 
     public boolean hasNext() throws TransactionAbortedException, DbException {
